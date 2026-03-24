@@ -12,6 +12,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({extended: true}));
 
 
+const methodOverride = require('method-override');
+app.use(methodOverride("_method"));
+
+
 //Mongoose Connection
 const mongoose = require('mongoose');
 const Listing = require('./models/listings');
@@ -29,6 +33,41 @@ app.get('/',(req,res)=>{
     res.send('Hello World!');
 });
 
+
+app.get('/listings/new', async (req,res)=>{
+    res.render('./listing/new.ejs')
+});
+app.get('/listings/:id/edit', async (req,res)=>{
+    let {id} = req.params;
+    let listing = await Listing.findById(id);
+    console.log(listing)
+    res.render('./listing/edit.ejs',{listing})
+});
+
+app.put('/listings/:id',async (req,res)=>{
+    let {id} = req.params;
+    let updatedListing = req.body.listing;
+    await Listing.findByIdAndUpdate(id,updatedListing,);
+    res.redirect(`/listings`);
+})
+
+app.delete('/listings/:id',async (req,res)=>{
+    let {id} = req.params;
+    await Listing.findByIdAndDelete(id)
+    res.redirect('/listings');
+})
+
+app.post('/listings',async (req,res)=>{
+    let listing = req.body.listing;
+    await Listing.insertOne(listing);
+    res.redirect('/listings')
+});
+
+app.get('/listings/:id',async (req,res)=>{
+    let {id} = req.params;
+    let listing = await Listing.findById(id);
+    res.render('./listing/show.ejs',{listing});
+});
 app.get('/listings', async (req,res)=>{
     let allListings = await Listing.find({});
     res.render('./listing/listings.ejs',{listings: allListings});
